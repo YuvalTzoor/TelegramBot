@@ -6,7 +6,6 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 
 const bot = new TelegramBot(token, { polling: true });
-//test
 bot.onText(/\/echo (.+)/, (msg, match) => {
 	// 'msg' is the received Message from Telegram
 	// 'match' is the result of executing the regexp above on the text content
