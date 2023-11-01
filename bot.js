@@ -1,64 +1,150 @@
 const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
-
-const token = process.env.TOKEN;
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { v4: uuidv4 } = require("uuid");
 
+const token = process.env.TOKEN;
 const bot = new TelegramBot(token, { polling: true });
-bot.onText(/\/echo (.+)/, (msg, match) => {
-	// 'msg' is the received Message from Telegram
-	// 'match' is the result of executing the regexp above on the text content
-	// of the message
-	console.log(msg);
-	const chatId = msg.chat.id;
-	const resp = match[1]; // the captured "whatever"
+let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
+let endpoint = "https://api.cognitive.microsofttranslator.com";
 
-	// send back the matched "whatever" to the chat
-	bot.sendMessage(chatId, resp);
-});
-bot.onText(/\/jokes/, async (msg, match) => {
-	const chatId = msg.chat.id;
 
-	try {
-
-		const { data } = await axios.get(
-			"https://heresajoke.com/chuck-norris-jokes/"
-		);
-
-		console.log(data);
-		// Initialize cheerio
-		const $ = cheerio.load(data);
-
-		// console.log($);
-
-		// Scrape jokes
-		const jokes = [];
-		$("ol li").each((index, element) => {
-			const joke = $(element).text();
-			jokes.push(joke);
-		});
-		console.log(jokes);
-		
-        const jokesArry = jokes[0];
-        console.log(jokesArry);
+let location = process.env.LOCATION;
+// Store user states and languages
+const userStates = {};
+const userLanguages = {};
+function getLanguageCode(language) {
 	
-		bot.sendMessage(chatId, `Here are some jokes:\n\n${jokesArry}`);
-	} catch (error) {
-		// Handle error
-		bot.sendMessage(
-			chatId,
-			"An error occurred while fetching jokes. Please try again later."
-		);
-		console.error(error);
-	}
-});
-// Listen for any kind of message. There are different kinds of
-// messages.
-bot.on("message", (msg) => {
+	const languageMap = {
+		english: "en",
+		hebrew: "he",
+		russian: "ru",
+		spanish: "es",
+		french: "fr",
+		german: "de",
+		italian: "it",
+		portuguese: "pt",
+		dutch: "nl",
+		swedish: "sv",
+		chinese: "zh",
+		japanese: "ja",
+		korean: "ko",
+		arabic: "ar",
+		czech: "cs",
+		danish: "da",
+		finnish: "fi",
+		greek: "el",
+		hindi: "hi",
+		norwegian: "no",
+		polish: "pl",
+		romanian: "ro",
+		turkish: "tr",
+		ukrainian: "uk",
+		vietnamese: "vi",
+		thai: "th",
+	};
+	return languageMap[language] || "en"; // Default to English
+}
+bot.on("text", async (msg) => {
 	const chatId = msg.chat.id;
-	// console.log(msg);
+	const text = msg.text;
+	let langCode = "";
 
-	// send a message to the chat acknowledging receipt of their message
-	bot.sendMessage(chatId, "Received your message");
+	// Check for 'set language' command
+	if (text.startsWith("set language ")) {
+		const language = text.substring(13).toLowerCase();
+		userLanguages[chatId] = language;
+		langCode = getLanguageCode(language);
+		console.log(getLanguageCode(language));
+		userStates[chatId] = "waiting for joke number";
+		axios({
+			baseURL: endpoint,
+			url: "/translate",
+			method: "post",
+			headers: {
+				"Ocp-Apim-Subscription-Key": key,
+				"Ocp-Apim-Subscription-Region": location,
+				"Content-type": "application/json",
+				"X-ClientTraceId": uuidv4().toString(),
+			},
+			params: {
+				"api-version": "3.0",
+				from: "en",
+				to: [langCode],
+			},
+			data: [
+				{
+					text: "No problem",
+				},
+			],
+			responseType: "json",
+		}).then(function (response) {
+			console.log(JSON.stringify(response.data, null, 4));
+			const reply = response.data[0].translations[0].text;
+			return bot.sendMessage(chatId, reply);
+		});
+		
+	}
+
+	if (
+		userStates[chatId] === "waiting for joke number" &&
+		!isNaN(text) &&
+		text >= 1 &&
+		text <= 100
+	) {
+		userStates[chatId] = null; // Reset state
+		try {
+			
+			const { data } = await axios.get(
+				"https://heresajoke.com/chuck-norris-jokes/"
+			);
+			const $ = cheerio.load(data);
+			const jokes = [];
+			$("ol li").each((index, element) => {
+				const joke = $(element).text();
+				jokes.push(joke);
+			});
+
+			let joke = jokes[text]; 
+			console.log(userLanguages[chatId] + "after");
+			if (userLanguages[chatId]) {
+				let langCode = getLanguageCode(userLanguages[chatId]);
+				axios({
+					baseURL: endpoint,
+					url: "/translate",
+					method: "post",
+					headers: {
+						"Ocp-Apim-Subscription-Key": key,
+						"Ocp-Apim-Subscription-Region": location,
+						"Content-type": "application/json",
+						"X-ClientTraceId": uuidv4().toString(),
+					},
+					params: {
+						"api-version": "3.0",
+						from: "en",
+						to: [langCode],
+					},
+					data: [
+						{
+							text: joke,
+						},
+					],
+					responseType: "json",
+				}).then(function (response) {
+					console.log(JSON.stringify(response.data, null, 4));
+					let reply = response.data[0].translations[0].text;
+					const finalReply=`${text}. ${reply}`;
+					return bot.sendMessage(chatId, finalReply);
+				});
+				
+			}
+
+		} catch (error) {
+			console.log(error);
+			return bot.sendMessage(chatId, "An error occurred. Please try again.");
+		}
+	}
+
+
 });
