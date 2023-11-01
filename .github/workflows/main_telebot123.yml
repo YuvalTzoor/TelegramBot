@@ -1,62 +1,41 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Node.js app to Azure Web App - TELEBOT123
+name: Deploy Telegram Bot to Azure
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Change this to your default branch if not 'main'
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      # Set up Node.js
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v2
         with:
-          node-version: '18.x'
+          node-version: "18"
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      # Run tests or any other build steps (Optional)
+      # - name: Run Tests
+      #   run: npm run test
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
-        with:
-          name: node-app
-          path: release.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v3
-        with:
-          name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      # Deploy to Azure
+      - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'TELEBOT123'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3C66F40DB184ECFBC9DC525103CA72C }}
-          package: .
+          app-name: "TELEBOT123" # Replace with your Azure App Service name
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile }} # Setup this secret in your GitHub repo
+          package: . # Path to your web app source code
+
+      # Log Deployment completion
+      - name: Deployment completed
+        run: echo "Deployment completed"
