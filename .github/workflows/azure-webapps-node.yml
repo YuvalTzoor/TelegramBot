@@ -1,0 +1,41 @@
+name: Deploy Telegram Bot to Azure
+
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch if not 'main'
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Set up Node.js
+    - name: Set up Node.js 18
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    # Install dependencies
+    - name: Install dependencies
+      run: npm install
+
+    # Run tests or any other build steps (Optional)
+    # - name: Run Tests
+    #   run: npm run test
+
+    # Deploy to Azure
+    - name: Deploy to Azure
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: Microsoft.Web-WebApp-Portal-cb4f6f7d-921e  # Replace with your Azure App Service name
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile }}  # Setup this secret in your GitHub repo
+        package: .  # Path to your web app source code
+
+    # Log Deployment completion
+    - name: Deployment completed
+      run: echo "Deployment completed"
