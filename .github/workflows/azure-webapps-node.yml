@@ -32,7 +32,7 @@ jobs:
     - name: Deploy to Azure
       uses: azure/webapps-deploy@v2
       with:
-        app-name: TELEBOT123  # Replace with your Azure App Service name
+        app-name: telebot123  # Replace with your Azure App Service name
         publish-profile: ${{ secrets.AzureAppService_PublishProfile }}  # Setup this secret in your GitHub repo
         package: .  # Path to your web app source code
 
