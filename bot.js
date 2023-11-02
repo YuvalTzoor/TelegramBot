@@ -106,7 +106,8 @@ bot.on("text", async (msg) => {
 				jokes.push(joke);
 			});
 
-			let joke = jokes[text+1]; 
+			let jokenum = parseInt(text) - 1;
+			let joke = jokes[jokenum];
 			console.log(userLanguages[chatId] + "after");
 			if (userLanguages[chatId]) {
 				let langCode = getLanguageCode(userLanguages[chatId]);
