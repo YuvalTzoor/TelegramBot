@@ -9,13 +9,11 @@ const bot = new TelegramBot(token, { polling: true });
 let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
 let endpoint = "https://api.cognitive.microsofttranslator.com";
 
-
 let location = process.env.LOCATION;
 // Store user states and languages
 const userStates = {};
 const userLanguages = {};
 function getLanguageCode(language) {
-	
 	const languageMap = {
 		english: "en",
 		hebrew: "he",
@@ -48,16 +46,16 @@ function getLanguageCode(language) {
 }
 bot.on("text", async (msg) => {
 	const chatId = msg.chat.id;
-	const text = msg.text;
-	let langCode = "";
+	const text = msg.text.trim();
+	let langCode = getLanguageCode(userLanguages[chatId] || "english");
 
 	// Check for 'set language' command
-	if (text.startsWith("set language ")) {
-		const language = text.substring(13).toLowerCase();
+	if (text.toLowerCase().startsWith("set language ")) {
+		const language = text.substring("set language ".length).toLowerCase();
 		userLanguages[chatId] = language;
 		langCode = getLanguageCode(language);
-		console.log(getLanguageCode(language));
 		userStates[chatId] = "waiting for joke number";
+
 		axios({
 			baseURL: endpoint,
 			url: "/translate",
@@ -73,79 +71,86 @@ bot.on("text", async (msg) => {
 				from: "en",
 				to: [langCode],
 			},
-			data: [
-				{
-					text: "No problem",
-				},
-			],
+			data: [{ text: "No problem" }],
 			responseType: "json",
-		}).then(function (response) {
-			console.log(JSON.stringify(response.data, null, 4));
-			const reply = response.data[0].translations[0].text;
-			return bot.sendMessage(chatId, reply);
-		});
-		
+		})
+			.then(function (response) {
+				const reply = response.data[0].translations[0].text;
+				bot.sendMessage(chatId, reply);
+			})
+			.catch(function (error) {
+				console.log(error);
+				bot.sendMessage(
+					chatId,
+					"Sorry, an error occurred while setting the language."
+				);
+			});
+
+		return;
 	}
 
 	if (
 		userStates[chatId] === "waiting for joke number" &&
 		!isNaN(text) &&
-		text >= 1 &&
-		text <= 100
+		+text >= 1 &&
+		+text <= 100
 	) {
-		userStates[chatId] = null; // Reset state
+		userStates[chatId] = null;
+
 		try {
-			
 			const { data } = await axios.get(
 				"https://heresajoke.com/chuck-norris-jokes/"
 			);
 			const $ = cheerio.load(data);
 			const jokes = [];
+
 			$("ol li").each((index, element) => {
-				const joke = $(element).text();
-				jokes.push(joke);
+				jokes.push($(element).text());
 			});
 
-			let jokenum = parseInt(text) - 1;
-			let joke = jokes[jokenum];
-			console.log(userLanguages[chatId] + "after");
-			if (userLanguages[chatId]) {
-				let langCode = getLanguageCode(userLanguages[chatId]);
-				axios({
-					baseURL: endpoint,
-					url: "/translate",
-					method: "post",
-					headers: {
-						"Ocp-Apim-Subscription-Key": key,
-						"Ocp-Apim-Subscription-Region": location,
-						"Content-type": "application/json",
-						"X-ClientTraceId": uuidv4().toString(),
-					},
-					params: {
-						"api-version": "3.0",
-						from: "en",
-						to: [langCode],
-					},
-					data: [
-						{
-							text: joke,
-						},
-					],
-					responseType: "json",
-				}).then(function (response) {
-					console.log(JSON.stringify(response.data, null, 4));
-					let reply = response.data[0].translations[0].text;
-					const finalReply=`${text}. ${reply}`;
-					return bot.sendMessage(chatId, finalReply);
-				});
-				
-			}
+			let jokeIndex = parseInt(text) - 1;
+			let joke = jokes[jokeIndex];
 
+			axios({
+				baseURL: endpoint,
+				url: "/translate",
+				method: "post",
+				headers: {
+					"Ocp-Apim-Subscription-Key": key,
+					"Ocp-Apim-Subscription-Region": location,
+					"Content-type": "application/json",
+					"X-ClientTraceId": uuidv4().toString(),
+				},
+				params: {
+					"api-version": "3.0",
+					from: "en",
+					to: [langCode],
+				},
+				data: [{ text: joke }],
+				responseType: "json",
+			})
+				.then(function (response) {
+					let translatedJoke = response.data[0].translations[0].text;
+					const finalReply = `${text}. ${translatedJoke}`;
+					bot.sendMessage(chatId, finalReply).then(() => {
+						const restartMessage =
+							"To start over please send 'set language' and your selected language like so: set language Spanish";
+						bot.sendMessage(chatId, restartMessage);
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+					bot.sendMessage(
+						chatId,
+						"Sorry, an error occurred while translating the joke."
+					);
+				});
 		} catch (error) {
 			console.log(error);
-			return bot.sendMessage(chatId, "An error occurred. Please try again.");
+			bot.sendMessage(
+				chatId,
+				"An error occurred while fetching jokes. Please try again later."
+			);
 		}
 	}
-
-
 });
