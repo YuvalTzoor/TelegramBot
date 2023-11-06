@@ -42,13 +42,19 @@ function getLanguageCode(language) {
 		vietnamese: "vi",
 		thai: "th",
 	};
+<<<<<<< HEAD
 	return languageMap[language] || null;
 }
 function isLanguageSupported(language) {
 	return !!getLanguageCode(language);
+=======
+	return languageMap[language.toLowerCase()] || null;
+>>>>>>> f81547241946a7e82c9977455d7e10495b4d4bcf
 }
+
 bot.on("text", async (msg) => {
 	const chatId = msg.chat.id;
+<<<<<<< HEAD
 	const text = msg.text.trim();
 	let langCode = getLanguageCode(userLanguages[chatId] || "english");
 
@@ -63,6 +69,19 @@ bot.on("text", async (msg) => {
 			langCode = getLanguageCode(language);
 			userStates[chatId] = "waiting for joke number";
 
+=======
+	const text = msg.text.trim().toLowerCase();
+	let langCode;
+
+	// Set language command
+	if (text.startsWith("set language")) {
+		const language = text.substring("set language".length).trim();
+		langCode = getLanguageCode(language);
+
+		if (langCode) {
+			userLanguages[chatId] = language;
+			userStates[chatId] = "waiting for joke number";
+>>>>>>> f81547241946a7e82c9977455d7e10495b4d4bcf
 			axios({
 				baseURL: endpoint,
 				url: "/translate",
@@ -86,13 +105,18 @@ bot.on("text", async (msg) => {
 					bot.sendMessage(chatId, reply);
 				})
 				.catch(function (error) {
+<<<<<<< HEAD
 					console.log(error);
+=======
+					console.error(error);
+>>>>>>> f81547241946a7e82c9977455d7e10495b4d4bcf
 					bot.sendMessage(
 						chatId,
 						"Sorry, an error occurred while setting the language."
 					);
 				});
 		} else {
+<<<<<<< HEAD
 			userLanguages[chatId] = undefined;
 			userStates[chatId] = undefined;
 			bot.sendMessage(
@@ -166,6 +190,76 @@ bot.on("text", async (msg) => {
 			bot.sendMessage(
 				chatId,
 				"An error occurred while fetching jokes. Please try again later."
+=======
+			bot.sendMessage(
+				chatId,
+				"The language is not supported. Please try a different one."
+			);
+			userStates[chatId] = null; // Reset the state if language not supported
+		}
+		return;
+	}
+
+	// Respond to joke number if in 'waiting for joke number' state
+	if (userStates[chatId] === "waiting for joke number") {
+		if (!isNaN(text) && parseInt(text) >= 1 && parseInt(text) <= 100) {
+			try {
+				const { data } = await axios.get(
+					"https://heresajoke.com/chuck-norris-jokes/"
+				);
+				const $ = cheerio.load(data);
+				const jokes = [];
+				$("ol li").each((index, element) => {
+					jokes.push($(element).text());
+				});
+
+				let jokeIndex = parseInt(text) - 1;
+				let joke = jokes[jokeIndex];
+				langCode = getLanguageCode(userLanguages[chatId]);
+
+				axios({
+					baseURL: endpoint,
+					url: "/translate",
+					method: "post",
+					headers: {
+						"Ocp-Apim-Subscription-Key": key,
+						"Ocp-Apim-Subscription-Region": location,
+						"Content-type": "application/json",
+						"X-ClientTraceId": uuidv4().toString(),
+					},
+					params: {
+						"api-version": "3.0",
+						from: "en",
+						to: [langCode],
+					},
+					data: [{ text: joke }],
+					responseType: "json",
+				})
+					.then(function (response) {
+						let translatedJoke = response.data[0].translations[0].text;
+						const finalReply = `${text}. ${translatedJoke}`;
+						bot.sendMessage(chatId, finalReply);
+					})
+					.catch(function (error) {
+						console.error(error);
+						bot.sendMessage(
+							chatId,
+							"Sorry, an error occurred while translating the joke."
+						);
+					});
+			} catch (error) {
+				console.error(error);
+				bot.sendMessage(
+					chatId,
+					"An error occurred while fetching jokes. Please try again later."
+				);
+			}
+		} else {
+			// If the message is not a number between 1 and 100, inform the user
+			bot.sendMessage(
+				chatId,
+				"Please send a number between 1 and 100 for a joke."
+>>>>>>> f81547241946a7e82c9977455d7e10495b4d4bcf
 			);
 		}
 	} else {
@@ -175,3 +269,4 @@ bot.on("text", async (msg) => {
 		);
 	}
 });
+
