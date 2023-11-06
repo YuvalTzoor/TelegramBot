@@ -42,7 +42,10 @@ function getLanguageCode(language) {
 		vietnamese: "vi",
 		thai: "th",
 	};
-	return languageMap[language] || "en"; // Default to English
+	return languageMap[language] || null;
+}
+function isLanguageSupported(language) {
+	return !!getLanguageCode(language);
 }
 bot.on("text", async (msg) => {
 	const chatId = msg.chat.id;
@@ -51,40 +54,52 @@ bot.on("text", async (msg) => {
 
 	// Check for 'set language' command
 	if (text.toLowerCase().startsWith("set language ")) {
-		const language = text.substring("set language ".length).toLowerCase();
-		userLanguages[chatId] = language;
-		langCode = getLanguageCode(language);
-		userStates[chatId] = "waiting for joke number";
+		const language = text
+			.substring("set language ".length)
+			.toLowerCase()
+			.trim();
+		if (isLanguageSupported(language)) {
+			userLanguages[chatId] = language;
+			langCode = getLanguageCode(language);
+			userStates[chatId] = "waiting for joke number";
 
-		axios({
-			baseURL: endpoint,
-			url: "/translate",
-			method: "post",
-			headers: {
-				"Ocp-Apim-Subscription-Key": key,
-				"Ocp-Apim-Subscription-Region": location,
-				"Content-type": "application/json",
-				"X-ClientTraceId": uuidv4().toString(),
-			},
-			params: {
-				"api-version": "3.0",
-				from: "en",
-				to: [langCode],
-			},
-			data: [{ text: "No problem" }],
-			responseType: "json",
-		})
-			.then(function (response) {
-				const reply = response.data[0].translations[0].text;
-				bot.sendMessage(chatId, reply);
+			axios({
+				baseURL: endpoint,
+				url: "/translate",
+				method: "post",
+				headers: {
+					"Ocp-Apim-Subscription-Key": key,
+					"Ocp-Apim-Subscription-Region": location,
+					"Content-type": "application/json",
+					"X-ClientTraceId": uuidv4().toString(),
+				},
+				params: {
+					"api-version": "3.0",
+					from: "en",
+					to: [langCode],
+				},
+				data: [{ text: "No problem" }],
+				responseType: "json",
 			})
-			.catch(function (error) {
-				console.log(error);
-				bot.sendMessage(
-					chatId,
-					"Sorry, an error occurred while setting the language."
-				);
-			});
+				.then(function (response) {
+					const reply = response.data[0].translations[0].text;
+					bot.sendMessage(chatId, reply);
+				})
+				.catch(function (error) {
+					console.log(error);
+					bot.sendMessage(
+						chatId,
+						"Sorry, an error occurred while setting the language."
+					);
+				});
+		} else {
+			userLanguages[chatId] = undefined;
+			userStates[chatId] = undefined;
+			bot.sendMessage(
+				chatId,
+				"The language is not supported, please try a different one."
+			);
+		}
 
 		return;
 	}
@@ -137,6 +152,7 @@ bot.on("text", async (msg) => {
 							"To start over please send 'set language' and your selected language like so: set language Spanish";
 						bot.sendMessage(chatId, restartMessage);
 					});
+					console.log(finalReply);
 				})
 				.catch(function (error) {
 					console.log(error);
@@ -152,5 +168,10 @@ bot.on("text", async (msg) => {
 				"An error occurred while fetching jokes. Please try again later."
 			);
 		}
+	} else {
+		bot.sendMessage(
+			chatId,
+			"Sorry, I could not find a joke with that number. Please try with a number between 1 and 100."
+		);
 	}
 });
