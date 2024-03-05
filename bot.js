@@ -10,7 +10,6 @@ let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
 console.log(key);
 let endpoint = "https://api.cognitive.microsofttranslator.com";
 
-
 let location = process.env.LOCATION;
 // Store user states and languages
 const userStates = {};
@@ -54,6 +53,13 @@ bot.on("text", async (msg) => {
 	let langCode;
 	//console.log(text);
 	// Set language command
+	if (text === "/start") {
+		bot.sendMessage(
+			chatId,
+			"Welcome to Chuck Norris Jokes Bot! Please set your language by typing 'set language' followed by the language you want to use. For example, 'set language spanish'."
+		);
+		return;
+	}
 	if (text.startsWith("set language")) {
 		const language = text.substring("set language".length).trim();
 		langCode = getLanguageCode(language);
@@ -78,7 +84,6 @@ bot.on("text", async (msg) => {
 				},
 				data: [{ text: "No problem" }],
 				responseType: "json",
-				
 			})
 				.then(function (response) {
 					const reply = response.data[0].translations[0].text;
@@ -104,7 +109,18 @@ bot.on("text", async (msg) => {
 	// Respond to joke number if in 'waiting for joke number' state
 	if (userStates[chatId] === "waiting for joke number") {
 		console.log("waiting for joke number");
-		if (!isNaN(text) && parseInt(text) >= 1 && parseInt(text) <= 100) {
+		//will chack if the text is a decimal number
+		function isDouble(txt) {
+			num = Number(txt);
+			return num % 1 !== 0;
+		}
+		console.log(isDouble(text));
+		if (
+			!isNaN(text) &&
+			parseInt(text) >= 1 &&
+			parseInt(text) <= 100 &&
+			!isDouble(text)
+		) {
 			try {
 				const { data } = await axios.get(
 					"https://heresajoke.com/chuck-norris-jokes"
@@ -160,7 +176,7 @@ bot.on("text", async (msg) => {
 			// If the message is not a number between 1 and 100, inform the user
 			bot.sendMessage(
 				chatId,
-				"Please send a number between 1 and 100 for a joke."
+				"Please send an integer number between 1 and 100 for a joke."
 			);
 		}
 	} else {
