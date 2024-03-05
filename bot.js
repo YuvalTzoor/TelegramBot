@@ -7,7 +7,9 @@ const { v4: uuidv4 } = require("uuid");
 const token = process.env.TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
+console.log(key);
 let endpoint = "https://api.cognitive.microsofttranslator.com";
+
 
 let location = process.env.LOCATION;
 // Store user states and languages
@@ -46,10 +48,11 @@ function getLanguageCode(language) {
 }
 
 bot.on("text", async (msg) => {
+	//console.log(msg);
 	const chatId = msg.chat.id;
 	const text = msg.text.trim().toLowerCase();
 	let langCode;
-
+	console.log(text);
 	// Set language command
 	if (text.startsWith("set language")) {
 		const language = text.substring("set language".length).trim();
@@ -71,10 +74,11 @@ bot.on("text", async (msg) => {
 				params: {
 					"api-version": "3.0",
 					from: "en",
-					to: [langCode],
+					to: langCode,
 				},
 				data: [{ text: "No problem" }],
 				responseType: "json",
+				
 			})
 				.then(function (response) {
 					const reply = response.data[0].translations[0].text;
@@ -99,17 +103,18 @@ bot.on("text", async (msg) => {
 
 	// Respond to joke number if in 'waiting for joke number' state
 	if (userStates[chatId] === "waiting for joke number") {
+		console.log("waiting for joke number");
 		if (!isNaN(text) && parseInt(text) >= 1 && parseInt(text) <= 100) {
 			try {
 				const { data } = await axios.get(
-					"https://heresajoke.com/chuck-norris-jokes/"
+					"https://heresajoke.com/chuck-norris-jokes"
 				);
 				const $ = cheerio.load(data);
 				const jokes = [];
 				$("ol li").each((index, element) => {
 					jokes.push($(element).text());
 				});
-
+				// console.log(jokes);
 				let jokeIndex = parseInt(text) - 1;
 				let joke = jokes[jokeIndex];
 				langCode = getLanguageCode(userLanguages[chatId]);
@@ -127,7 +132,7 @@ bot.on("text", async (msg) => {
 					params: {
 						"api-version": "3.0",
 						from: "en",
-						to: [langCode],
+						to: langCode,
 					},
 					data: [{ text: joke }],
 					responseType: "json",
@@ -165,4 +170,3 @@ bot.on("text", async (msg) => {
 		);
 	}
 });
-
