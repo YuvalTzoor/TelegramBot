@@ -52,7 +52,7 @@ bot.on("text", async (msg) => {
 	const chatId = msg.chat.id;
 	const text = msg.text.trim().toLowerCase();
 	let langCode;
-	console.log(text);
+	//console.log(text);
 	// Set language command
 	if (text.startsWith("set language")) {
 		const language = text.substring("set language".length).trim();
