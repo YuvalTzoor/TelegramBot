@@ -20,11 +20,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A6984FD973594A9CBA16327C5D5F2430 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_178A4666CAE14908837A3C795BF2CDF4 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F58C966447534B64BBC2989E5F105DFC }}
+
       - name: Set Environment Variables in Azure Web App
         run: |
           az webapp config appsettings set --name "ChuckBot" --resource-group "ChuckBot_group-b318" --settings TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} TRANSLATOR_TEXT_SUBSCRIPTION_KEY=${{ secrets.TRANSLATOR_TEXT_SUBSCRIPTION_KEY }} LOCATION=${{ secrets.LOCATION }}
         env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}    
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: npm install, build, and test
         run: |
@@ -59,13 +66,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A6984FD973594A9CBA16327C5D5F2430 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_178A4666CAE14908837A3C795BF2CDF4 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F58C966447534B64BBC2989E5F105DFC }}
-
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
@@ -73,4 +73,3 @@ jobs:
           app-name: "ChuckBot"
           slot-name: "Production"
           package: .
-
