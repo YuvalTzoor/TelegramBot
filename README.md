@@ -5,7 +5,7 @@ ChuckBot is a Telegram bot that provides hard cold facts about Chuck Norris with
 ## Features
 
 - ChuckBot provides Chuck Norris jokes and facts in multiple languages.
-- Jokes are scraped in real-time using Puppeteer to keep the content fresh.
+- Jokes are scraped in real-time using Cheerio to keep the content fresh.
 - Automatic translation is powered by the Azure Translation API, allowing users to enjoy jokes in their preferred language.
 - Deployed on an Azure for 24/7 availability.
 
@@ -19,4 +19,4 @@ ChuckBot is a Telegram bot that provides hard cold facts about Chuck Norris with
 
 ## Deployment
 
-ChuckBot is deployed on an Azure virtual machine
+ChuckBot is deployed on an Azure Web App
