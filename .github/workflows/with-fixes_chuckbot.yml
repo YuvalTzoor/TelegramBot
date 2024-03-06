@@ -20,10 +20,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TRANSLATOR_TEXT_SUBSCRIPTION_KEY: ${{ secrets.TRANSLATOR_TEXT_SUBSCRIPTION_KEY }}
-          LOCATION: ${{ secrets.LOCATION }}
 
       - name: npm install, build, and test
         run: |
@@ -72,3 +68,8 @@ jobs:
           app-name: "ChuckBot"
           slot-name: "Production"
           package: .
+      - name: Set Environment Variables in Azure Web App
+        run: |
+          az webapp config appsettings set --name "ChuckBot" --resource-group "ChuckBot_group-b318" --settings TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} TRANSLATOR_TEXT_SUBSCRIPTION_KEY=${{ secrets.TRANSLATOR_TEXT_SUBSCRIPTION_KEY }} LOCATION=${{ secrets.LOCATION }}
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
