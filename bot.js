@@ -4,7 +4,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const { v4: uuidv4 } = require("uuid");
 
-const token = process.env.TOKEN;
+const token = process.env.TELEGRAM_TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
 console.log(key);
