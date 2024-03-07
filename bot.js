@@ -5,8 +5,10 @@ const cheerio = require("cheerio");
 const { v4: uuidv4 } = require("uuid");
 
 const token = process.env.TELEGRAM_TOKEN;
+console.log(token);
 const bot = new TelegramBot(token, { polling: true });
 let key = process.env.TRANSLATOR_TEXT_SUBSCRIPTION_KEY;
+console.log(key);
 let endpoint = "https://api.cognitive.microsofttranslator.com";
 
 let location = process.env.LOCATION;
