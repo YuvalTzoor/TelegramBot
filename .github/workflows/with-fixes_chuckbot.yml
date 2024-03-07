@@ -7,9 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_and_deploy:
+  build:
     runs-on: ubuntu-latest
-
+    outputs:
+      timestamp: ${{ steps.get_timestamp.outputs.timestamp }}
     steps:
       - uses: actions/checkout@v4
 
@@ -17,28 +18,49 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+          
       - name: npm install and build
         run: |
           npm install
           npm run build --if-present
-
-      - name: Zip artifact for deployment
+          
+      - name: Generate deployment package
         run: zip -r release.zip .
+        
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release.zip
+
+      - name: Get the current timestamp
+        id: get_timestamp
+        run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: release
+      
+      - name: Unzip artifact for deployment
+        run: unzip release.zip -d ./deploy
+        
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: "ChuckBot"
           slot-name: "Production"
-          package: release.zip
+          package: ./deploy
 
       - name: Set Environment Variables in Azure Web App
         run: |
           az webapp config appsettings set --name "ChuckBot" --resource-group "ChuckBot_group-b318" --settings TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} TRANSLATOR_TEXT_SUBSCRIPTION_KEY=${{ secrets.TRANSLATOR_TEXT_SUBSCRIPTION_KEY }} LOCATION=${{ secrets.LOCATION }}
-   
