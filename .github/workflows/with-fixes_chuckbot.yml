@@ -27,6 +27,7 @@ jobs:
         run: |
           npm install
           npm run build --if-present
+          npm run start --if-present
 
       - name: Zip artifact for deployment
         run: zip -r release.zip .
@@ -41,4 +42,3 @@ jobs:
       - name: Set Environment Variables in Azure Web App
         run: |
           az webapp config appsettings set --name "ChuckBot" --resource-group "ChuckBot_group-b318" --settings TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }} TRANSLATOR_TEXT_SUBSCRIPTION_KEY=${{ secrets.TRANSLATOR_TEXT_SUBSCRIPTION_KEY }} LOCATION=${{ secrets.LOCATION }}
-
