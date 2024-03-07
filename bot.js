@@ -1,9 +1,12 @@
+const express = require("express");
+const app = express();
 const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { v4: uuidv4 } = require("uuid");
 
+const port = process.env.PORT || 3000;
 const token = process.env.TELEGRAM_TOKEN;
 console.log(token);
 const bot = new TelegramBot(token, { polling: true });
@@ -186,4 +189,8 @@ bot.on("text", async (msg) => {
 			"Sorry, I could not find a joke with that number. Please try with a number between 1 and 100."
 		);
 	}
+});
+
+app.listen(port, () => {
+	console.log(`Server running on port ${port}`);
 });
