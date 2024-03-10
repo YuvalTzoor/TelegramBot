@@ -60,7 +60,7 @@ bot.on("text", async (msg) => {
 	if (text === "/start") {
 		bot.sendMessage(
 			chatId,
-			"Welcome to Chuck Norris Jokes Bot! Please set your language by typing 'set language' followed by the language you want to use. For example, 'set language spanish'."
+			"Welcome to Chuck Norris Jokes Bot! Please start by setting your language by typing 'set language' followed by the language you want to use. For example, 'set language spanish'.Then, choose a number between 1 to 100 to get a funny Chuck Norris joke!"
 		);
 		return;
 	}
@@ -86,7 +86,7 @@ bot.on("text", async (msg) => {
 					from: "en",
 					to: langCode,
 				},
-				data: [{ text: "No problem" }],
+				data: [{ text: "No problem, now choose a number between 1 to 100 to get an awesome joke (: " }],
 				responseType: "json",
 			})
 				.then(function (response) {
