@@ -62,6 +62,10 @@ bot.on("text", async (msg) => {
 			chatId,
 			"Welcome to Chuck Norris Jokes Bot!\nPlease start by setting your desired language by typing 'set language' followed by the language you want to use.\nFor example, 'set language spanish'.\nThen, choose a number between 1 to 100 to get a funny Chuck Norris joke!\n*The default Language is English."
 		);
+		// Set the default language to English
+		langCode = getLanguageCode;
+		("english");
+		userStates[chatId] = "waiting for joke number";
 		return;
 	}
 	if (text.startsWith("set language")) {
@@ -122,7 +126,10 @@ bot.on("text", async (msg) => {
 			num = Number(txt);
 			return num % 1 !== 0;
 		}
-		console.log("Is the joke number that was entered was a Double number? :"+isDouble(text));
+		console.log(
+			"Is the joke number that was entered was a Double number? :" +
+				isDouble(text)
+		);
 		if (
 			!isNaN(text) &&
 			parseInt(text) >= 1 &&
@@ -141,7 +148,7 @@ bot.on("text", async (msg) => {
 				// console.log(jokes);
 				let jokeIndex = parseInt(text) - 1;
 				let joke = jokes[jokeIndex];
-				console.log("The chosen joke was:"+joke);
+				console.log("The chosen joke was:" + joke);
 				langCode = getLanguageCode(userLanguages[chatId]);
 
 				axios({
