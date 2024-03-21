@@ -63,7 +63,7 @@ bot.on("text", async (msg) => {
 			"Welcome to Chuck Norris Jokes Bot!\nPlease start by setting your desired language by typing 'set language' followed by the language you want to use.\nFor example, 'set language spanish'.\nThen, choose a number between 1 to 100 to get a funny Chuck Norris joke!\n*The default Language is English."
 		);
 		// Set the default language to English
-		langCode = getLanguageCode("english");
+		langCode = "en";
 		userStates[chatId] = "waiting for joke number";
 		return;
 	}
