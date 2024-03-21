@@ -64,13 +64,17 @@ bot.on("text", async (msg) => {
 		);
 		// Set the default language to English
 		langCode = "en";
-		userStates[chatId] = "waiting for joke number";
+		userStates[chatId] = "waiting for joke number default";
 		return;
 	}
-	if (text.startsWith("set language")) {
-		const language = text.substring("set language".length).trim();
-		langCode = getLanguageCode(language);
-
+	if (
+		text.startsWith("set language") ||
+		userStates[chatId] === "waiting for joke number default"
+	) {
+		if (text.startsWith("set language")) {
+			const language = text.substring("set language".length).trim();
+			langCode = getLanguageCode(language);
+		}
 		if (langCode) {
 			userLanguages[chatId] = language;
 			userStates[chatId] = "waiting for joke number";
@@ -195,6 +199,7 @@ bot.on("text", async (msg) => {
 			);
 		}
 	} else {
+		console.log("error");
 		bot.sendMessage(
 			chatId,
 			"Sorry, I could not find a joke with that number. Please try with a number between 1 and 100."
