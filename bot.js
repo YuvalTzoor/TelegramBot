@@ -62,19 +62,22 @@ bot.on("text", async (msg) => {
 			chatId,
 			"Welcome to Chuck Norris Jokes Bot!\nPlease start by setting your desired language by typing 'set language' followed by the language you want to use.\nFor example, 'set language spanish'.\nThen, choose a number between 1 to 100 to get a funny Chuck Norris joke!\n*The default Language is English."
 		);
-		// Set the default language to English
-		langCode = "en";
-		userStates[chatId] = "waiting for joke number default";
 		return;
 	}
-	if (
-		text.startsWith("set language") ||
-		userStates[chatId] === "waiting for joke number default"
+	while (
+		!text.startsWith("set language") &&
+		userStates[chatId] != "waiting for joke number"
 	) {
-		if (text.startsWith("set language")) {
-			const language = text.substring("set language".length).trim();
-			langCode = getLanguageCode(language);
-		}
+		bot.sendMessage(
+			chatId,
+			"Please start by setting your desired language by typing 'set language' followed by the language you want to use.\nFor example, 'set language spanish'."
+		);
+		return;
+	}
+	if (text.startsWith("set language")) {
+		const language = text.substring("set language".length).trim();
+		langCode = getLanguageCode(language);
+
 		if (langCode) {
 			userLanguages[chatId] = language;
 			userStates[chatId] = "waiting for joke number";
@@ -199,7 +202,6 @@ bot.on("text", async (msg) => {
 			);
 		}
 	} else {
-		console.log("error");
 		bot.sendMessage(
 			chatId,
 			"Sorry, I could not find a joke with that number. Please try with a number between 1 and 100."
