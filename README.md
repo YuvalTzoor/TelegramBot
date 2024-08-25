@@ -1,3 +1,5 @@
+## 🚧 Project Status: Not Active 🚧
+
 # ChuckBot
 
 ChuckBot is a Telegram bot that provides hard cold facts about Chuck Norris with automatic translation. ChuckBot scrapes jokes from a website using Cheerio and uses the Azure Translation API for translation. It is built using the Node.js library `node-telegram-bot-api` and deployed to Azure. You can chat with ChuckBot at [https://t.me/ChuckNorris101_bot](https://t.me/ChuckNorris101_bot).
